@@ -1,0 +1,17 @@
++- db            - 数据库相关
++- debug         - 调试
++- extra         - 其他辅助库
++- file          - 文件相关
++- gd            - 绘图相关
++- session       - Session相关
++- settings      - Settings相关
++- sqlscripts    - 初始框架的SQL脚本
++- tag           - 标签相关
++- ubb
++- html
++- http          - http相关
++- wordlib       - 词库
++- ui
+ - eien_config.php    - 框架配置
+ - config.php    - 配置
+ - eien.php      - 框架包含

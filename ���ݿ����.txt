@@ -1,0 +1,42 @@
+连接数据库
+
+$cnn = new MySQLConnection();
+
+查询数据
+
+$rs = new MySQLRecordset("select * from table1", $cnn);
+
+while (!$rs->eof())
+{
+    echo $rs->getFields(0);
+    echo $rs->getFields(1);
+    echo $rs->getFields(2);
+    echo $rs->getFields('fieldname');
+    $rs->moveNext();
+}
+
+插入数据
+
+$mdf = new MySQLModifier($cnn, "table1");
+
+$mdf->addNew(array(
+    'fieldname' => 'value',
+    'fieldname' => 'value',
+    'fieldname' => 'value',
+    'fieldname' => 'value',
+    'fieldname' => 'value',
+));
+
+修改数据
+
+$mdf->modify(array(
+    'fieldname' => 'value',
+    'fieldname' => 'value',
+    'fieldname' => 'value',
+    'fieldname' => 'value',
+    'fieldname' => 'value',
+), 某一主键值);
+
+删除数据
+
+$mdf->delete(某一主键值);
