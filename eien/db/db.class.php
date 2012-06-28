@@ -3,7 +3,6 @@
 	@author WaiTing
 	@version 1.0.0 Beta
  */
-if (!defined('IN_EIEN')) exit("No in eien framework");
 define('EIEN_DB_CLASS', 1);
 
 class db
@@ -194,6 +193,10 @@ interface IDBConnection
 		@return IDBResult
 	 */
 	function listTables();
+	/**	@brief 获得数据库表名的引用标记
+		@return array 两个元素分别表示左右俩标记
+	 */
+	function tableQuotes();
 }
 
 /**	@brief 数据结果操作接口
@@ -727,6 +730,10 @@ public function listTables()
 		return new MySQLResult(mysql_list_tables($this->db_name, $this->mysql_cnn));
 	}
 	return false;
+}
+public function tableQuotes()
+{
+	return array( '`', '`' );
 }
 
 }

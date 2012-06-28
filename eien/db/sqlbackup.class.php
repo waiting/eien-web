@@ -5,7 +5,6 @@
  * @package Eien.Web.DB.SQL
  * @version 1.0.0
  */
-if (!defined('IN_EIEN')) exit("No in eien framework");
 define('EIEN_SQLBACKUP_CLASS', 1);
 
 /**
@@ -23,27 +22,32 @@ class SQLBackup
 	 */
 	private $file = null;  # 文件操作接口
 	/**
+	 * @var array
+	 */
+	private $tableQuotes = array( '', '' );
+	/**
 	 * @param IDBConnection $cnn
 	 * @param IFile $file
 	 * @return SQLBackup
 	 */
-	function __construct(IDBConnection $cnn, IFile $file)
+	function __construct( IDBConnection $cnn, IFile $file )
 	{
 		$this->cnn = $cnn;
 		$this->file = $file;
+		$this->tableQuotes = $cnn->tableQuotes();
 	}
 	/**
 	 * @param string $tablename
 	 */
 	function backupTableStructure($tablename)
 	{
-		$res = $this->cnn->query("SHOW CREATE TABLE $tablename;");
+		$res = $this->cnn->query("SHOW CREATE TABLE {$this->tableQuotes[0]}{$tablename}{$this->tableQuotes[1]};");
 		$row = $res->fetchRow();
 		$this->file->puts("\n");
 		$this->file->puts("-- -----------------------------\n");
-		$this->file->puts("-- Table $tablename structure;\n");
+		$this->file->puts("-- Table {$this->tableQuotes[0]}{$tablename}{$this->tableQuotes[1]} structure;\n");
 		$this->file->puts("-- -----------------------------\n");
-		$this->file->puts("DROP TABLE IF EXISTS $tablename;\n");
+		$this->file->puts("DROP TABLE IF EXISTS {$this->tableQuotes[0]}{$tablename}{$this->tableQuotes[1]};\n");
 		$this->file->puts($row[1].";\n");
 	}
 	/**
@@ -53,10 +57,10 @@ class SQLBackup
 	{
 		$this->file->puts("\n");
 		$this->file->puts("-- -----------------------------\n");
-		$this->file->puts("-- Table $tablename data;\n");
+		$this->file->puts("-- Table {$this->tableQuotes[0]}{$tablename}{$this->tableQuotes[1]} data;\n");
 		$this->file->puts("-- -----------------------------\n");
-		$res = $this->cnn->query("SELECT * FROM $tablename;");
-		$sql = "INSERT INTO $tablename VALUES (";
+		$res = $this->cnn->query("SELECT * FROM {$this->tableQuotes[0]}{$tablename}{$this->tableQuotes[1]};");
+		$sql = "INSERT INTO {$this->tableQuotes[0]}{$tablename}{$this->tableQuotes[1]} VALUES (";
 		while ($row = $res->fetchRow())
 		{
 			$i = 0;
@@ -75,14 +79,14 @@ class SQLBackup
 	 */
 	function backupDB()
 	{
-		$this->file->puts("-- ----------------------------------------\n");
+		$this->file->puts("-- ------------------------------------------\n");
 		$this->file->puts("-- 此SQL脚本由Eien database backup tools产生\n");
 		$this->file->puts("-- Eien database backup tools version 1.1.0\n");
 		$this->file->puts("-- \n");
-		$this->file->puts("-- Author : WaiTing\n");
-		$this->file->puts("-- QQ     : 162057326\n");
+		$this->file->puts("--  Author: WaiTing\n");
+		$this->file->puts("--      QQ: 162057326\n");
 		$this->file->puts("-- WebSite: www.x86pro.com\n");
-		$this->file->puts("-- ----------------------------------------\n");
+		$this->file->puts("-- ------------------------------------------\n");
 
 		$res = $this->cnn->query("SHOW TABLES;");
 		$tablenames = array();
@@ -103,4 +107,3 @@ class SQLBackup
 		$s->setSQLTextFromIFile($this->file, false, true);
 	}
 }
-?>

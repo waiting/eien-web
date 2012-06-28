@@ -4,7 +4,6 @@
  * @author WaiTing
  * @version 1.0.0
  */
-if (!defined('IN_EIEN')) exit("No in eien framework");
 define('EIEN_SQLSCRIPT_CLASS', 1);
 
 /**
