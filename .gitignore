@@ -1,4 +1,5 @@
 useless/
 temp/
-eien-tools/
+eien-tools/data/
+eien-tools/temp/
 *.7z

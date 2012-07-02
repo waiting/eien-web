@@ -3,99 +3,123 @@
 	@author WaiTing
 	@version 1.0.0 Beta
  */
-define('EIEN_DB_CLASS', 1);
+//if (!defined('IN_EIEN')) exit("No in eien framework");
+define('EIEN_DB_CLASS', 'db/db.class.php');
+
+/** 数据库配置 */
+class DbConfig
+{
+	public static $db_type = 'mysql';
+	public static $db_host = 'localhost';
+	public static $db_user = 'root';
+	public static $db_pwd = '';
+	public static $db_name = '';
+	public static $db_charset = 'utf8';
+}
 
 class db
 {
-/// 数据库类型
-public static $type;
-/**	@brief 普通文本转成SQL语句安全的文本,用做SQL语句的字符串.
-	@param $str string 需要转码的字符串
-	@return string
-	@warning 如果没有连接MySQL数据库就使用此函数,可能会有问题!
- */
-public static function escape($str, $cnn = null)
-{
-	$s = '';
-	switch (strtolower(self::$type))
+	/**	@brief 普通文本转成SQL语句安全的文本,用做SQL语句的字符串.
+		@param $str string 需要转码的字符串
+		@return string
+		@warning 如果没有连接MySQL数据库就使用此函数,可能会有问题! */
+	public static function escape($str, $cnn = null)
 	{
-	case 'mysql':
-		$s = mysql_real_escape_string($str, ($cnn ? $cnn->mysql_cnn : self::cnn()->mysql_cnn));
-		break;
-	case 'sqlite':
-		break;
+		$s = '';
+		switch (strtolower(DbConfig::$db_type))
+		{
+		case 'mysql':
+			$s = mysql_real_escape_string($str, ($cnn ? $cnn->mysql_cnn : self::cnn()->mysql_cnn));
+			break;
+		case 'sqlite':
+			break;
+		}
+		return $s;
 	}
-	return $s;
-}
-/**	@brief 创建数据库连接
-	@param $type string DB Type.
-	@return IDBConnection
- */
-public static function cnn($new = false)
-{
-	$cnn = null;
-	switch (strtolower(self::$type))
+	/**	@brief 创建数据库连接
+		@param $type string DB Type.
+		@return IDBConnection
+	 */
+	public static function cnn($new = false)
 	{
-	case 'mysql':
-		$cnn = $new ? (new MySQLConnection(null, null, null, null, null, DBCNN_PCONNECT)) : MySQLConnection::getCnn();
-		break;
-	case 'sqlite':
-		break;
+		$cnn = null;
+		switch (strtolower(DbConfig::$db_type))
+		{
+		case 'mysql':
+			$cnn = $new ?
+				(new MySQLConnection(
+					DbConfig::$db_host,
+					DbConfig::$db_user,
+					DbConfig::$db_pwd,
+					DbConfig::$db_name,
+					DbConfig::$db_charset,
+					DBCNN_PCONNECT
+				))
+				:
+				MySQLConnection::cnn(
+					DbConfig::$db_host,
+					DbConfig::$db_user,
+					DbConfig::$db_pwd,
+					DbConfig::$db_name,
+					DbConfig::$db_charset,
+					DBCNN_PCONNECT
+				);
+			break;
+		case 'sqlite':
+			break;
+		}
+		return $cnn;
 	}
-	return $cnn;
-}
-/**
-	@return IDBModifier
- */
-public static function mdf($tableName, $cnn = null)
-{
-	$mdf = null;
-	switch (strtolower(self::$type))
+	/**
+		@return IDBModifier
+	 */
+	public static function mdf($tableName, $cnn = null)
 	{
-	case 'mysql':
-		$mdf = new MySQLModifier($tableName, ($cnn ? $cnn : self::cnn()));
-		break;
-	case 'sqlite':
-		break;
+		$mdf = null;
+		switch (strtolower(DbConfig::$db_type))
+		{
+		case 'mysql':
+			$mdf = new MySQLModifier($tableName, ($cnn ? $cnn : self::cnn()));
+			break;
+		case 'sqlite':
+			break;
+		}
+		return $mdf;
 	}
-	return $mdf;
-}
-/**
-	@return IDBRecordset
- */
-public static function rs($source, $cnn = null)
-{
-	$rs = null;
-	switch (strtolower(self::$type))
+	/**
+		@return IDBRecordset
+	 */
+	public static function rs($source, $cnn = null)
 	{
-	case 'mysql':
-		$rs = new MySQLRecordset($source, ($cnn ? $cnn : self::cnn()));
-		break;
-	case 'sqlite':
-		break;
+		$rs = null;
+		switch (strtolower(DbConfig::$db_type))
+		{
+		case 'mysql':
+			$rs = new MySQLRecordset($source, ($cnn ? $cnn : self::cnn()));
+			break;
+		case 'sqlite':
+			break;
+		}
+		return $rs;
 	}
-	return $rs;
-}
-/**
-	@return IDBTable
- */
-public static function tbl($tableName, $cnn = null)
-{
-	$tbl = null;
-	switch (strtolower(self::$type))
+	/**
+		@return IDBTable
+	 */
+	public static function tbl($tableName, $cnn = null)
 	{
-	case 'mysql':
-		$tbl = new MySQLTable($tableName, ($cnn ? $cnn : self::cnn()));
-		break;
-	case 'sqlite':
-		break;
+		$tbl = null;
+		switch (strtolower(DbConfig::$db_type))
+		{
+		case 'mysql':
+			$tbl = new MySQLTable($tableName, ($cnn ? $cnn : self::cnn()));
+			break;
+		case 'sqlite':
+			break;
+		}
+		return $tbl;
 	}
-	return $tbl;
-}
 
 }
-// 数据库类型
-db::$type = config('db_type');
 
 
 /**	@brief 数据库连接接口
@@ -443,34 +467,30 @@ define('DBCNN_NOCONNECT',0);
 define('DBCNN_CONNECT',1);
 //! MySQL级别的,相同参数的连接,直接使用先前的有效连接
 define('DBCNN_PCONNECT',2);
-//! PHP级别的,如果存在连接,则直接使用有效连接. 在此方式下,如果确定先前已经有连接,则不需要填写参数
-define('DBCNN_EXIST',3);
 
 /**	@brief MYSQL连接类
  */
 class MySQLConnection implements IDBConnection
 {
 public $mysql_cnn = null;
-public $db_host = null;
-public $db_user = null;
-public $db_pwd = null;
-public $db_name = null;
-public $linkcharset = null;
+private $db_host = null;
+private $db_user = null;
+private $db_pwd = null;
+private $db_name = null;
+private $linkcharset = null;
 private $connectType = 0;
 private $autoClose = true;
 
 private static $existCnn = null;
 /**	@brief 获取存在的DBCnn */
-public static function getCnn()
+public static function cnn( $db_host = null, $db_user = null, $db_pwd = null, $db_name = null, $linkcharset = null, $connectType = DBCNN_PCONNECT )
 {
-	if (self::$existCnn == null)
+	if ( !is_object(self::$existCnn) )
 	{
-		$db_host = config('db_host') . ':' . config('db_port');
-		$db_user = config('db_user');
-		$db_pwd = config('db_password');
-		$db_name = config('db_name');
-		$linkcharset = config('db_charset');
-		self::$existCnn = new MySQLConnection($db_host, $db_user, $db_pwd, $db_name, $linkcharset, DBCNN_PCONNECT);
+		if ( $db_host === null || $db_user === null || $db_pwd === null || $db_name === null || $linkcharset === null )
+			exit( '<strong>Fatal error</strong>: '.__METHOD__.'(): '.'参数不正确，无法构造数据连接对象'.' in <strong>'.__FILE__.'</strong> on line <strong>'.__LINE__.'</strong>');
+
+		self::$existCnn = new MySQLConnection( $db_host, $db_user, $db_pwd, $db_name, $linkcharset, $connectType );
 	}
 	return self::$existCnn;
 }
@@ -493,31 +513,9 @@ public static function from($mysql_cnn, $autoClose = false)
 	@param $db_pwd string 密码
 	@param $db_name string 数据库名
 	@param $linkcharset string 校验字符集
-	@param $connectType int 连接类型
- */
-public function __construct($db_host = null, $db_user = null, $db_pwd = null, $db_name = null, $linkcharset = null, $connectType = DBCNN_EXIST)
+	@param $connectType int 连接类型 */
+public function __construct( $db_host, $db_user, $db_pwd, $db_name, $linkcharset, $connectType = DBCNN_PCONNECT )
 {
-	if ($db_host === null && config('db_host') !== null && config('db_port') !== null)
-	{
-		$db_host = config('db_host') . ':' . config('db_port');
-	}
-	if ($db_user === null && config('db_user') !== null)
-	{
-		$db_user = config('db_user');
-	}
-	if ($db_pwd === null && config('db_password') !== null)
-	{
-		$db_pwd = config('db_password');
-	}
-	if ($db_name === null && config('db_name') !== null)
-	{
-		$db_name = config('db_name');
-	}
-	if ($linkcharset === null && config('db_charset') !== null)
-	{
-		$linkcharset = config('db_charset');
-	}
-
 	$this->db_host = $db_host;
 	$this->db_user = $db_user;
 	$this->db_pwd = $db_pwd;
@@ -531,14 +529,6 @@ public function __construct($db_host = null, $db_user = null, $db_pwd = null, $d
 		break;
 	case DBCNN_PCONNECT:
 		$this->pconnect();
-		break;
-	case DBCNN_EXIST:
-		if (self::$existCnn == null)
-		{
-			self::$existCnn = new MySQLConnection($db_host, $db_user, $db_pwd, $db_name, $linkcharset, DBCNN_PCONNECT);
-		}
-		$this->autoClose = false;
-		$this->mysql_cnn = self::$existCnn->mysql_cnn;
 		break;
 	}
 }
@@ -572,6 +562,9 @@ public function pconnect()
 {
 	if ($this->autoClose)
 		$this->close();
+	
+	if ( !function_exists('mysql_pconnect') )
+		return $this->connect();
 
 	$this->mysql_cnn = mysql_pconnect($this->db_host,$this->db_user,$this->db_pwd);
 
@@ -676,7 +669,7 @@ public function directQuery($sql)
 		$ret = mysql_query($sql, $this->mysql_cnn);
 		if ( $this->error() )
 		{
-			echo  $this->error() . '<br />' . $sql . '<br />';
+			//echo  $this->error() . '<br />' . $sql . '<br />';
 			return false;
 		}
 		return $ret;
@@ -1222,4 +1215,3 @@ public function mdf()
 
 }
 
-?>

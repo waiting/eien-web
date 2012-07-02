@@ -1,29 +1,24 @@
 <?php
-/**
- * HTTP相关类 HttpWebRequest, HttpHeaderProcessor, URLProcessor
+/** HTTP相关类 HttpWebRequest, HttpHeaderProcessor, URLProcessor
  * @author WaiTing
  * @package Eien.Web.Http
- * @version 1.0.0
- */
-if (!defined('IN_EIEN')) exit("No in eien framework");
-define('EIEN_HTTP_CLASS', 1);
+ * @version 1.0.0 */
+
+//if (!defined('IN_EIEN')) exit("No in eien framework");
+define('EIEN_HTTP_CLASS', 'http/http.class.php');
 
 /**
- * HTTP头部处理器
- */
+ * HTTP头部处理器 */
 class HttpHeaderProcessor
 {
 /**
- * @var string
- */
+ * @var string */
 public $method = '', $url = '', $version = '';
 /**
- * @var string
- */
+ * @var string */
 public $statusCode = '', $statusStr = '';
 /**
- * @var array
- */
+ * @var array */
 public $header = array();
 public function __construct($headerStr = null)
 {
@@ -131,38 +126,30 @@ public function delHeader($name)
 
 /**
  * URL处理器,URL的生成,解析
- * URL = "http:""//"host[":"port][path["?"query]] 
- */
+ * URL = "http:""//"host[":"port][path["?"query]] */
 class URLProcessor
 {
 /**
- * @var string
- */
+ * @var string */
 public $scheme, $host, $port, $path, $query, $fragment, $user, $pass;
 /**
- * @var array
- */
+ * @var array */
 public $queryItems = array(), $urlRes = array();
 /**
- * @param string $url
- */
+ * @param string $url */
 public function __construct($url = null)
 {
 	$this->parse($url);
 }
-/**
- * 得到URL
- * @return string
- */
+/** 得到URL
+ * @return string */
 public function getUrl()
 {
 	return "$this->scheme://".($this->user ? $this->user.($this->pass ? ":$this->pass" : '').'@' : '')."$this->host".($this->port ? ":$this->port" : '')."$this->path".($this->query ? "?$this->query" : '').($this->fragment ? "#$this->fragment" : '');
 }
-/**
- * 解析URL
+/** 解析URL
  * @param string $url
- * @return array
- */
+ * @return array */
 public function parse($url)
 {
 	$urlRes = parse_url($url);
@@ -178,8 +165,7 @@ public function parse($url)
 	$this->queryItems = self::parseQuery($this->query);
 	return $urlRes;
 }
-/**
- * 组建URL
+/** 组建URL
  * @param string $scheme
  * @param string $host
  * @param string $port
@@ -188,8 +174,7 @@ public function parse($url)
  * @param string $fragment
  * @param string $user
  * @param string $pass
- * @return string
- */
+ * @return string */
 public function build($scheme, $host, $port, $path, $query, $fragment = null, $user = null, $pass = null)
 {
 	$this->scheme = $scheme;
@@ -202,22 +187,18 @@ public function build($scheme, $host, $port, $path, $query, $fragment = null, $u
 	$this->fragment = $fragment;
 	return $this->getUrl();
 }
-/**
- * 生成QueryString
+/** 生成QueryString
  * @param array $items
- * @return string
- */
+ * @return string */
 public static function makeQuery($items)
 {
 	$query = '';
 	$query = http_build_query($items);
 	return $query;
 }
-/**
- * 解析QueryString
+/** 解析QueryString
  * @param string $queryStr
- * @return array
- */
+ * @return array */
 public static function parseQuery($queryStr)
 {
 	$res = array();
@@ -230,12 +211,10 @@ public static function parseQuery($queryStr)
 class HttpWebRequest
 {
 /**
- * @var HttpHeaderProcessor
- */
+ * @var HttpHeaderProcessor */
 public $header = null;
 /**
- * @var URLProcessor
- */
+ * @var URLProcessor */
 private $urlpc = null;
 private $responseHeader = null;
 private $responseBody = null;
@@ -271,8 +250,7 @@ public function send($data = null)
 		max_redirects
 		protocol_version
 		timeout
-		ignore_errors
-	*/
+		ignore_errors */
 	$http_opts = array(
 		'method' => $this->header->method,
 	);

@@ -1,16 +1,13 @@
-<?
-/**
- * 此类完成从数据库到SQL语句的转化
+<?php
+/** 此类完成从数据库到SQL语句的转化
  * @author WaiTing
  * @package Eien.Web.DB.SQL
- * @version 1.0.0
- */
-define('EIEN_SQLBACKUP_CLASS', 1);
+ * @version 1.1.0 */
+//if (!defined('IN_EIEN')) exit("No in eien framework");
+define('EIEN_SQLBACKUP_CLASS', 'db/sqlbackup.class.php');
 
-/**
- * 以下是数据库备份类SQLBackup
- * @version 1.1.0
- */
+/** 以下是数据库备份类SQLBackup
+ * @version 1.1.0 */
 class SQLBackup
 {
 	/**
@@ -77,7 +74,7 @@ class SQLBackup
 	/**
 		备份数据库
 	 */
-	function backupDB()
+	function backupDB($backupStructure = true)
 	{
 		$this->file->puts("-- ------------------------------------------\n");
 		$this->file->puts("-- 此SQL脚本由Eien database backup tools产生\n");
@@ -88,13 +85,17 @@ class SQLBackup
 		$this->file->puts("-- WebSite: www.x86pro.com\n");
 		$this->file->puts("-- ------------------------------------------\n");
 
-		$res = $this->cnn->query("SHOW TABLES;");
+		$res = $this->cnn->listTables();
 		$tablenames = array();
 		while ($row = $res->fetchRow())
-		{
 			$tablenames[] = $row[0];
-			$this->backupTableStructure($row[0]);
+
+		if ($backupStructure)
+		{
+			foreach ($tablenames as $tablename)
+				$this->backupTableStructure($tablename);
 		}
+
 		foreach ($tablenames as $tablename)
 			$this->backupTableData($tablename);
 	}
@@ -103,7 +104,8 @@ class SQLBackup
 	 */
 	function resumeDB()
 	{
-		$s = new SQLScript($this->cnn);
-		$s->setSQLTextFromIFile($this->file, false, true);
+		$script = new SQLScript($this->cnn);
+		$script->loadSQLFromIFile($this->file);
+		$script->execute();
 	}
 }

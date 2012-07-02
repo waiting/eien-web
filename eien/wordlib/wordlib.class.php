@@ -1,10 +1,9 @@
 <?php
 /**	词库类
 	词库必须是本地编码,即GB码
-	可提供分词操作
- */
-if (!defined('IN_EIEN')) exit("No in eien framework");
-define('EIEN_WORDLIB_CLASS', 1);
+	可提供分词操作 */
+
+define('EIEN_WORDLIB_CLASS', 'wordlib/wordlib.class.php');
 
 class WordLib
 {
@@ -260,5 +259,3 @@ public function splitWord($text, &$arrWords)
 }
 
 }
-
-?>

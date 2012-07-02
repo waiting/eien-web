@@ -1,6 +1,6 @@
 <?php
-if (!defined('IN_EIEN')) exit("No in eien framework");
-define('EIEN_HTMLTAG_CLASS', 1);
+//if (!defined('IN_EIEN')) exit("No in eien framework");
+define('EIEN_HTMLTAG_CLASS', 'html/htmltag.class.php');
 
 /** html tag context */
 class HtmlContext extends TagContext
@@ -32,7 +32,7 @@ function html_proc($str, $procType = Tag::PROC_REPLACE)
 /** HTML文本节点 */
 class HtmlTextNode extends TextNode
 {
-public function asStr($procType = Tag::PROC_RAW)
+public function process($procType = Tag::PROC_RAW)
 {
 	switch ($procType)
 	{
@@ -42,7 +42,7 @@ public function asStr($procType = Tag::PROC_RAW)
 	case HtmlTag::PROC_ASUBB:
 		return str_replace('&nbsp;&nbsp;&nbsp;&nbsp;', "\t", trim($this->value));
 	}
-	return parent::asStr($procType);
+	return parent::process($procType);
 }
 
 }
@@ -50,7 +50,7 @@ public function asStr($procType = Tag::PROC_RAW)
 /** HTML标签节点 */
 class HtmlTag extends Tag
 {
-const PROC_ASUBB = 11;   // 转为UBB代码
+const PROC_ASUBB = 42;   // 转为UBB代码
 public function __construct()
 {
 	parent::__construct();
@@ -68,16 +68,16 @@ protected function asUbbProc()
 
 	$foot = $this->odd ? '' : '[/'.strtolower($this->tagName).']';
 
-	return $head.$this->childAsStr(HtmlTag::PROC_ASUBB).$foot;
+	return $head.$this->childProcess(HtmlTag::PROC_ASUBB).$foot;
 }
-public function asStr($procType = Tag::PROC_RAW)
+public function process($procType = Tag::PROC_RAW)
 {
 	switch ($procType)
 	{
 	case HtmlTag::PROC_ASUBB:
 		return $this->asUbbProc();
 	}
-	return parent::asStr($procType);
+	return parent::process($procType);
 }
 
 }
@@ -114,9 +114,9 @@ protected function asUbbProc()
 	foreach ($this->children as $e)
 	{
 		if ($e->type == Node::UE_TEXT)
-			$childStr .= $e->asStr(Tag::PROC_RAW);
+			$childStr .= $e->process(Tag::PROC_RAW);
 		else
-			$childStr .= $e->asStr(HtmlTag::PROC_ASUBB);
+			$childStr .= $e->process(HtmlTag::PROC_ASUBB);
 	}
 	return $head.$childStr.$foot;
 }
@@ -127,7 +127,7 @@ class HtmlTagSpan extends HtmlTag
 {
 protected function asUbbProc()
 {
-	$childStr = $this->childAsStr(HtmlTag::PROC_ASUBB);
+	$childStr = $this->childProcess(HtmlTag::PROC_ASUBB);
 
 	$styles = array();
 	$styleStr = $this->getAttr('style');
@@ -194,11 +194,11 @@ protected function asUbbProc()
 {
 	if (($href = $this->getAttr('href')) !== null)
 	{	// 链接
-		return '[url'.($href !== '' ? '="'.addcslashes($href, Tag::ADDSLASHES).'"' : '').']'.$this->childAsStr(HtmlTag::PROC_ASUBB).'[/url]';
+		return '[url'.($href !== '' ? '="'.addcslashes($href, Tag::ADDSLASHES).'"' : '').']'.$this->childProcess(HtmlTag::PROC_ASUBB).'[/url]';
 	}
 	else
 	{	// 锚点, 是锚点的话, 则不处理, 直接返回子节点
-		return $this->childAsStr(HtmlTag::PROC_ASUBB);
+		return $this->childProcess(HtmlTag::PROC_ASUBB);
 	}
 }
 
@@ -252,8 +252,6 @@ class HtmlTagP extends HtmlTag
 {
 protected function asUbbProc()
 {
-	return $this->childAsStr(HtmlTag::PROC_ASUBB)."\r\n";
+	return $this->childProcess(HtmlTag::PROC_ASUBB)."\r\n";
 }
 }
-
-?>

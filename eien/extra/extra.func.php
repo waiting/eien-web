@@ -1,15 +1,20 @@
-<?
-/**
- * 辅助函数
+<?php
+/** 一些额外辅助函数
  * @package Eien.Web.ExtraFunc
  * @author WaiTing
  * @version 1.1.0
  */
-define('EIEN_EXTRA_FUNC', 1);
-/**
- * FlashShow,用于向网页中嵌入FLASH插件,并提供一些常用操作
- * 输出遵循XHTML1.0
- */
+//if (!defined('IN_EIEN')) exit("No in eien framework");
+define('EIEN_EXTRA_FUNC', 'extra/extra.func.php');
+
+/** Extra Functions config */
+class ExtraConfig
+{
+	public static $page_charset = 'UTF-8';
+}
+
+/** FlashShow,用于向网页中嵌入FLASH插件,并提供一些常用操作
+ * 输出遵循XHTML1.0 */
 function flash_show($mains, $params = array(), $flaVars = array())
 {
 	if (!is_array($mains))
@@ -85,9 +90,9 @@ function flash_show($mains, $params = array(), $flaVars = array())
 	return $s;
 }
 
-include_once 'mime_inc.php';
+require_once 'mime.inc.php';
 /**
- * get mime-type
+ * get mime type
  */
 function get_mime($filename, $ext = null)
 {
@@ -121,9 +126,8 @@ function get_mime($filename, $ext = null)
 	@param $addr string 地址串,{p}将会替换成页号
 	@param $p int 页号
 	@param $pc int 总页数
-	@param $sc int 显示数 -1则全部显示
- */
-function splitPage($addr, $p, $pc, $sc = -1, $first = '首页'/*'&lsaquo;&lsaquo;&lsaquo;'*/, $prev = '上页'/*'&lsaquo;&lsaquo;'*/, $next = '下页'/*'&rsaquo;&rsaquo;'*/, $last = '末页'/*'&rsaquo;&rsaquo;&rsaquo;'*/)
+	@param $sc int 显示数 -1则全部显示 */
+function split_page($addr, $p, $pc, $sc = -1, $first = '首页'/*'&lsaquo;&lsaquo;&lsaquo;'*/, $prev = '上页'/*'&lsaquo;&lsaquo;'*/, $next = '下页'/*'&rsaquo;&rsaquo;'*/, $last = '末页'/*'&rsaquo;&rsaquo;&rsaquo;'*/)
 {
 	$pages = array();
 	if ($pc > 0)
@@ -211,18 +215,16 @@ function get_url()
 }
 /**
  * 给定一个值，若真，则输出指定字符串，否则输出另外字符串
- * @param boolean $bool
- * @param string $str1
- * @param string $str2
- * @return string
+ * @param $b boolean
+ * @param $v1
+ * @param $v2
  */
-function iifstr($bool, $str1, $str2 = '')
+function iif($b, $v1, $v2 = '')
 {
-	return $bool ? $str1 : $str2;
+	return $b ? $v1 : $v2;
 }
-/**
- */
-function limitWords($str, $n, $chn = true)
+/** 限字数(gbk) */
+function limit_words($str, $n, $chn = true)
 {
 	$len = strlen($str);
 	$retStr = '';
@@ -261,8 +263,7 @@ function limitWords($str, $n, $chn = true)
 	}*/
 	return $retStr;
 }
-/**
- * 处理文章中的HTML特殊字符
+/** 处理文章中的HTML特殊字符
  * @param string $string 要处理的字符串
  * @param boolean $bIsHtml 若为true,则结果可包含html标签; 为false,则把html标签转化为&??;
  * @return string
@@ -278,8 +279,7 @@ function str_html($string, $bIsHtml = false)
 	$string = nl2br($string);
 	return $string;
 }
-/**
- * 此函数将把PHP字符串转换成单行形式
+/** 此函数将把PHP字符串转换成单行形式
  * 把换行转化为\n
  * @param string $string
  * @return string
@@ -288,46 +288,44 @@ function str_source($string)
 {
 	return addcslashes($string,"\'\"\x0..\x19");
 }
-/**
- * 从GET,POST,COOKIE获取字符串. ',",\,NULL
+/** 从GET,POST,COOKIE获取字符串. ',",\,NULL
  * @param string $string
  * @param bool[optional] $haveSlashes true,结果包含\; false,结果祛除\
  * @return string
  */
-function GPC($string, $haveSlashes = false)
+function gpc($string, $haveSlashes = false)
 {
 	$magic_quotes_gpc = ini_get('magic_quotes_gpc');
 	if($haveSlashes) return $magic_quotes_gpc ? $string : addslashes($string);
 	return $magic_quotes_gpc ? stripslashes($string) : $string;
 }
 
-function arrGPC($arr, $haveSlashes = false)
+function arr_gpc($arr, $haveSlashes = false)
 {
 	$newarr = array();
 	foreach ($arr as $k => $v)
 	{
 		if (is_array($v))
 		{
-			$newarr[$k] = arrGPC($v, $haveSlashes);
+			$newarr[$k] = arr_gpc($v, $haveSlashes);
 		}
 		else
 		{
-			$newarr[$k] = GPC($v, $haveSlashes);
+			$newarr[$k] = gpc($v, $haveSlashes);
 		}
 	}
 	return $newarr;
 }
-/**
- * 从脚本接收字符串
+/** 从脚本接收字符串
  * 由于脚本编码是UTF-8,所以需要转换
  * 此函数需要设置全局变量$page_charset,指定当前页面编码
  * @param string $str
  * @return string
  */
-function strFromScript($str, $do_gpc = false, $haveSlashes = false)
+function str_from_script($str, $do_gpc = false, $haveSlashes = false)
 {
-	$page_charset = config('page_charset');
-	return $do_gpc ? GPC(iconv('UTF-8',"{$page_charset}//IGNORE",$str), $haveSlashes) : iconv('UTF-8',"{$page_charset}//IGNORE",$str);
+	$page_charset = ExtraConfig::$page_charset;
+	return $do_gpc ? gpc(iconv('UTF-8',"{$page_charset}//IGNORE",$str), $haveSlashes) : iconv('UTF-8',"{$page_charset}//IGNORE",$str);
 }
 
 /**
@@ -338,17 +336,17 @@ function strFromScript($str, $do_gpc = false, $haveSlashes = false)
  * @param bool[optional] $haveSlashes
  * @return array
  */
-function arrFromScript($arr, $do_gpc = false, $haveSlashes = false){
+function arr_from_script($arr, $do_gpc = false, $haveSlashes = false){
 	$newarr = array();
 	foreach($arr as $k => $v)
 	{
 		if (is_array($v))
 		{
-			$newarr[strFromScript($k, $do_gpc, $haveSlashes)] = arrFromScript($v, $do_gpc, $haveSlashes);
+			$newarr[str_from_script($k, $do_gpc, $haveSlashes)] = arr_from_script($v, $do_gpc, $haveSlashes);
 		}
 		else
 		{
-			$newarr[strFromScript($k, $do_gpc, $haveSlashes)] = strFromScript($v, $do_gpc, $haveSlashes);
+			$newarr[str_from_script($k, $do_gpc, $haveSlashes)] = str_from_script($v, $do_gpc, $haveSlashes);
 		}
 	}
 	return $newarr;
@@ -357,7 +355,7 @@ function arrFromScript($arr, $do_gpc = false, $haveSlashes = false){
  * 返回用户IP地址
  * @return string
  */
-function IP()
+function ip()
 {
 	$ip = "Unknown";
 	if (isset($_SERVER["HTTP_X_FORWARDED_FOR"]))
@@ -374,10 +372,9 @@ function IP()
 		$ip = getenv("REMOTE_ADDR");
 	return $ip;
 }
-/**
- * 字节大小
- */
-function asByteSize($size){
+/** 输出字节单位 */
+function bytes_unit($size)
+{
 	if ($size < 1024)
 	{
 		return $size . ' B';
@@ -401,103 +398,10 @@ function site_decode($encodedata)
 {
 	return base64_decode($encodedata);
 }
-#获取文件夹包含文件的一些信息,如文件总数,总字节数
-function infoOfFolder($path, &$fileCount = null, &$dirCount = null)
-{
-	$handle = opendir($path);
-	$bytes = 0;
-	while ($filename = readdir($handle))
-	{
-		if ($filename == '.' || $filename == '..') continue;
-		$fullname = $path.'/'.$filename;
-		if (is_dir($fullname))
-		{
-			$dirCount++;
-			$bytes += infoOfFolder($fullname, $fileCount, $dirCount);
-		}
-		else
-		{
-			$fileCount++;
-			$bytes += filesize($fullname);
-		}
-	}
-	closedir($handle);
-	return $bytes;
-}
-function bytesOfFolder($path)
-{
-	return infoOfFolder($path);
-}
-# 获取文件夹中的文件和子文件夹
-function dataOfFolder($path, &$fileArr, &$subFolderArr)
-{
-	$handle = opendir($path);
-	$fileArr = array();
-	$subFolderArr = array();
-	while ($filename = readdir($handle))
-	{
-		if ($filename == '.' || $filename == '..') continue;
-		if (is_dir($path.'/'.$filename))
-			array_push($subFolderArr, $filename);
-		else
-			array_push($fileArr, $filename);
-	}
-	closedir($handle);
-	asort($fileArr);
-	asort($subFolderArr);
-}
-# 通用删除.删除文件夹和文件
-function commonDelete($path)
-{
-	if (is_dir($path))
-	{
-		dataOfFolder($path, $fileArr, $subFolderArr);
-		foreach ($fileArr as $filename)
-		{
-			commonDelete($path.'/'.$filename);
-		}
-		foreach ($subFolderArr as $subpath)
-		{
-			commonDelete($path.'/'.$subpath);
-		}
-		rmdir($path);
-	}
-	else
-	{
-		unlink($path);
-	}
-}
-# 文件名(strip extension name)
-function file_name($fullpath)
-{
-	$name = basename($fullpath);
-	$pos = strrpos($name, '.');
-	return substr($name, 0, $pos === false ? -1 : $pos);
-}
-/** 使目录存在 */
-function make_dir_exists($path, $cb_func_create = null)
-{
-	$arr = split('/',$path);
-	$fullpath = '';
-	foreach ($arr as $subpath)
-	{
-		if($subpath != '')
-		{
-			$fullpath .= $subpath . '/';
-			if (!is_dir($fullpath))
-			{
-				if ($cb_func_create == null)
-				{
-					mkdir($fullpath, 0700);
-				}
-				else
-				{
-					$cb_func_create($fullpath);
-				}
-			}
-		}
-	}
-	return $fullpath;
-}
 
-?>
+/** 引发致命错误
+function fatal_error($errstr)
+{
+	exit( '<strong>Fatal error</strong>: '.__METHOD__.'(): '.$errstr.' in <strong>'.__FILE__.'</strong> on line <strong>'.__LINE__.'</strong>');
+}*/
+

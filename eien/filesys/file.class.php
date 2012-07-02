@@ -1,12 +1,11 @@
-<?
-/**
- * 文件操作相关
+<?php
+/** 文件/目录操作相关
  * @author WaiTing
  * @package Eien
  * @version 1.1.0
  */
-if (!defined('IN_EIEN')) exit("No in eien framework");
-define('EIEN_FILE_CLASS', 1);
+//if (!defined('IN_EIEN')) exit("No in eien framework");
+define('EIEN_FILE_CLASS', 'filesys/file.class.php');
 
 /**
  * 文件接口
@@ -245,8 +244,7 @@ public static function delete($filename)
 
 }
 
-/**
- * 块输出文件
+/** 分块输出文件
  * @version 1.0.1
  */
 class BlockOutFile extends File
@@ -297,10 +295,9 @@ function puts($str)
 }
 
 }
-/**
- * 块输入文件
- * @version 1.0.0
- */
+
+/** 分块输入文件
+ * @version 1.0.0 */
 class BlockInFile extends File
 {
 private $dirname;     # 目录名
@@ -329,7 +326,7 @@ public function BlockInFile($filename)
 	if (preg_match('/(.*_)(\d+)$/',$this->filetitle,$matches))
 	{
 		$this->filetitle = $matches[1];
-		$maxfileno = $matches[2] + 0;
+		$maxfileno = (int)$matches[2];
 		$i = 1;
 		for ($i = 1; $i <= $maxfileno; $i++)
 		{
@@ -385,4 +382,3 @@ public function eof()
 
 }
 
-?>

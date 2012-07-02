@@ -211,6 +211,7 @@ $mimetypes = array(
 	'pdf' => 'application/pdf',
 	'pfr' => 'application/font-tdpfr',
 	'pgm' => 'image/x-portable-graymap',
+	'php' => 'text/plain',
 	'pict' => 'image/x-pict',
 	'pm' => 'application/x-perl',
 	'pmd' => 'application/x-pmd',
@@ -411,5 +412,4 @@ $mimetypes = array(
 	'z' => 'application/x-compress',
 	'zac' => 'application/x-zaurus-zac',
 	'zip' => 'application/zip', 
-	'php' => 'text/plain',
 );

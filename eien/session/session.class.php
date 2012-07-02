@@ -1,12 +1,24 @@
-<?
-/**
- * Session类 提供session相关操作
- * @author WaiTing
- * @version 1.0.0
- */
-if (!defined('IN_EIEN')) exit("No in eien framework");
-define('EIEN_SESSION_CLASS', 1);
+<?php
+//if (!defined('IN_EIEN')) exit("No in eien framework");
+define('EIEN_SESSION_CLASS', 'session/session.class.php');
 
+/** Session配置 */
+class SessionConfig
+{
+	public static $sessTable = ''; # Session数据表
+	public static $sessWhere = 0;  # Session存在于哪: 1数据库,0独立文件
+	public static $savePath;       # Session独立文件路径目录
+
+	public static _init()
+	{
+		self::$savePath = realpath(dirname(__FILE__).'/data');
+	}
+}
+SessionConfig::_init();
+
+/** Session类 提供session相关操作
+ * @author WaiTing
+ * @version 1.0.0 */
 class Session
 {
 public static $sessName = '';      # session 名称,一般是PHPSESSID
@@ -176,9 +188,9 @@ public function __unset($name)
 
 }
 
-Session::$sessTable = tname('sessions');
-Session::$sessWhere = config('session_where');
-Session::$savePath = config('session_path');
+Session::$sessTable = SessionConfig::$sessTable;
+Session::$sessWhere = SessionConfig::$sessWhere;
+Session::$savePath = SessionConfig::$savePath;
 session_save_path(Session::$savePath); // 设置Session路径
 if (Session::$sessWhere == 1)
 {
@@ -241,7 +253,7 @@ function ss_write_handler($sessID, $text)
 	}
 	$expiry = $time + $lifetime;
 
-	$ip = IP();  # in extra_func.php
+	$ip = ip();  # in extra_func.php
 	// access url
 	$aurl = get_url();
 
@@ -281,4 +293,3 @@ function ss_gc_handler($lifetime)
 }
 
 
-?>

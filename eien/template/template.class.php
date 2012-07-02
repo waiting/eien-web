@@ -2,22 +2,23 @@
 /**	模板页面引擎
 	eien template engine
 	@author WaiTing
-	@version 0.1.0
- */
-if (!defined('IN_EIEN')) exit("No in eien framework");
-define('EIEN_TEMPLATE_CLASS', 1);
+	@version 0.1.0 */
+//if (!defined('IN_EIEN')) exit("No in eien framework");
+define('EIEN_TEMPLATE_CLASS', 'template/template.class.php');
 
-/*模板类*/
+/** 模板类 */
 class Template
 {
-public $varcx;  // 变量场景
-public $templateDir; // 模板文件路径
-public $compileDir; // 编译路径
-public $cacheDir; // 缓存路径
+public $varcx;         # 变量场景
+public $templateDir;   # 模板文件路径
+public $compileDir;    # 编译路径
+public $cacheDir;      # 缓存路径
+public $ldelim = '{';
+public $rdelim = '}';
 
-public $cache = 0; // 缓存控制, 0 禁止, 1 打开
-public $lifeTime = 0; // 缓存时间
-public $mode; // 执行模式选择
+public $cache = 0;     # 缓存控制, 0 禁止, 1 打开
+public $lifeTime = 0;  # 缓存时间
+public $mode;          # 执行模式选择
 public function __construct($mode = TplTag::PROC_RESULT)
 {
 	$this->varcx = array();
@@ -31,8 +32,8 @@ public function assignRef($name, &$refVal)
 {
 	$this->varcx[$name] = &$refVal;
 }
-// 检查是否存在编译文件,以及是否需要重新编译
-// 编译模板,返回编译后的文件名
+/** 检查是否存在编译文件,以及是否需要重新编译
+编译模板,返回编译后的文件名 */
 public function compile($template)
 {
 	$cepName = file_name($template).'_'.base64_encode(file_name($template)).'.cep';
@@ -57,22 +58,30 @@ public function compile($template)
 	if ($needc)
 	{
 		$f = new File($this->templateDir.$template);
-		$pr = new TagParser(new TplContext($this));
-		$doc = $pr->parse($f->bufData);
-		$code = $doc->asStr(TplTag::PROC_COMPILE);
-		$cepFile = new File($this->compileDir.$cepName, 'w');
-		$cepFile->puts($code);
-		$cepFile->close();
+		$this->compileTplText($f->bufData, $cepName);
 	}
 	return $cepName;
 }
-// 直接解释模板
+/** 编译模板文本 */
+public function compileTplText($tplText, $cepName)
+{
+	$pr = new TagParser(new TplContext($this));
+	$code = $pr->parse($tplText)->process(TplTag::PROC_COMPILE);
+	$cepFile = new File($this->compileDir.$cepName, 'w');
+	$cepFile->puts($code);
+	$cepFile->close();
+}
+/** 直接解释模板 */
 public function result($template)
 {
 	$f = new File($this->templateDir.$template);
+	return $this->resultTplText($f->bufData);
+}
+/** 直接解释模板文本 */
+public function resultTplText($tplText)
+{
 	$pr = new TagParser(new TplContext($this));
-	$doc = $pr->parse($f->bufData);
-	return $doc->asStr(TplTag::PROC_RESULT);
+	return $pr->parse($tplText)->process(TplTag::PROC_RESULT);
 }
 // 缓存机制
 // 检查是否存在缓存,以及是否过期
@@ -104,6 +113,7 @@ public function display($template, $cacheId = '')
 			$cepName = $this->compile($template);
 			if ($this->cache)
 			{
+				$varcx = &$this->varcx;
 				ob_start();
 				include $this->compileDir.$cepName;
 				$r = ob_get_clean();
@@ -114,6 +124,7 @@ public function display($template, $cacheId = '')
 			}
 			else
 			{
+				$varcx = &$this->varcx;
 				include $this->compileDir.$cepName;
 			}
 		}
@@ -151,36 +162,36 @@ public function fetch($template, $cacheId = '')
 /******************* template Tag Context *******************/
 class TplContext extends TagContext
 {
-public $tpl;
-public function __construct(Template $tpl)
-{
-	parent::__construct('<','>','TextNode', array(
-		'' => 'TplTagOutput', // 输出标签
-		'if' => 'TplTagIf',
-		'elseif' => 'TplOddTag',
-		'else' => 'TplOddTag',
-		'iif' => 'TplTagIIf',
-		'for' => 'TplTagFor',
-		'forelse' => 'TplOddTag',
-		'loop' => 'TplTagLoop',
-		'loopelse' => 'TplOddTag',
-		'load' => 'TplTagLoad',
-	));
-	$this->tpl = $tpl;
-}
+	public $tpl;
+	public function __construct(Template $tpl)
+	{
+		parent::__construct($tpl->ldelim, $tpl->rdelim, 'TextNode', array(
+			'' => 'TplTagOutput', // 输出标签
+			'if' => 'TplTagIf',
+			'elseif' => 'TplOddTag',
+			'else' => 'TplOddTag',
+			'iif' => 'TplTagIIf',
+			'for' => 'TplTagFor',
+			'forelse' => 'TplOddTag',
+			'loop' => 'TplTagLoop',
+			'loopelse' => 'TplOddTag',
+			'load' => 'TplTagLoad',
+		));
+		$this->tpl = $tpl;
+	}
 }
 
 /*模板标签基类*/
 class TplTag extends Tag
 {
-const PROC_COMPILE = 31;  // 编译模板
-const PROC_RESULT = 32;   // 直接输出结果
+const PROC_COMPILE = 44;  // 编译模板
+const PROC_RESULT = 45;   // 直接输出结果
 public function __construct()
 {
 	parent::__construct();
 	$this->odd = false;
 }
-public function asStr($procType = Tag::PROC_RAW)
+public function process($procType = Tag::PROC_RAW)
 {
 	switch ($procType)
 	{
@@ -189,9 +200,9 @@ public function asStr($procType = Tag::PROC_RAW)
 	case TplTag::PROC_RESULT:
 		return $this->resultProc();
 	}
-	return parent::asStr($procType);
+	return parent::process($procType);
 }
-public function childAsStrEx($procType = Tag::PROC_RAW, $stopType = Node::UE_ELEM, $stopTag = null, $incStopTag = false, $start = 0, &$pos = null)
+public function childProcessEx($procType = Tag::PROC_RAW, $stopType = Node::UE_ELEM, $stopTag = null, $incStopTag = false, $start = 0, &$pos = null)
 {
 	$s = '';
 	$cnt = count($this->children);
@@ -206,7 +217,7 @@ public function childAsStrEx($procType = Tag::PROC_RAW, $stopType = Node::UE_ELE
 				{
 					if (array_search($e->tagName, $stopTag) !== false)
 					{
-						if ($incStopTag) $s .= $e->asStr($procType);
+						if ($incStopTag) $s .= $e->process($procType);
 						break;
 					}
 				}
@@ -214,7 +225,7 @@ public function childAsStrEx($procType = Tag::PROC_RAW, $stopType = Node::UE_ELE
 				{
 					if ($e->tagName == $stopTag)
 					{
-						if ($incStopTag) $s .= $e->asStr($procType);
+						if ($incStopTag) $s .= $e->process($procType);
 						break;
 					}
 				}
@@ -225,7 +236,7 @@ public function childAsStrEx($procType = Tag::PROC_RAW, $stopType = Node::UE_ELE
 				{
 					if (array_search($e->value, $stopTag) !== false)
 					{
-						if ($incStopTag) $s .= $e->asStr($procType);
+						if ($incStopTag) $s .= $e->process($procType);
 						break;
 					}
 				}
@@ -233,17 +244,17 @@ public function childAsStrEx($procType = Tag::PROC_RAW, $stopType = Node::UE_ELE
 				{
 					if ($e->value == $stopTag)
 					{
-						if ($incStopTag) $s .= $e->asStr($procType);
+						if ($incStopTag) $s .= $e->process($procType);
 						break;
 					}
 				}
 			}
 		}
-		$s .= $e->asStr($procType);
+		$s .= $e->process($procType);
 	}
 	return $s;
 }
-public function childAsStrEx2($procType = Tag::PROC_RAW, $stopTag = null, $incStopTag = false, $start = 0)
+public function childProcessEx2($procType = Tag::PROC_RAW, $stopTag = null, $incStopTag = false, $start = 0)
 {
 	$s = '';
 	$cnt = count($this->children);
@@ -256,7 +267,7 @@ public function childAsStrEx2($procType = Tag::PROC_RAW, $stopTag = null, $incSt
 			{
 				if ($pos == $stopTag)
 				{
-					if ($incStopTag) $s .= $e->asStr($procType);
+					if ($incStopTag) $s .= $e->process($procType);
 					break;
 				}
 			}
@@ -264,12 +275,12 @@ public function childAsStrEx2($procType = Tag::PROC_RAW, $stopTag = null, $incSt
 			{
 				if ($e === $stopTag)
 				{
-					if ($incStopTag) $s .= $e->asStr($procType);
+					if ($incStopTag) $s .= $e->process($procType);
 					break;
 				}
 			}
 		}
-		$s .= $e->asStr($procType);
+		$s .= $e->process($procType);
 	}
 	return $s;
 }
@@ -332,20 +343,14 @@ protected function resultProc()
 protected function ec($expr)
 {
 	// 在生成的PHP代码中$this代表关联的模板对象实例
-	return preg_replace('@\\$([A-Za-z0-9_]+)@', '\\$this->varcx[\'$1\']', $expr);
-}
-protected function eec($expr)
-{
-	// 在生成的PHP代码中$this代表本节点对象
 	return preg_replace('@\\$([A-Za-z0-9_]+)@', '\\$varcx[\'$1\']', $expr);
 }
-// 进行表达式 expression execute..
+// 执行表达式 expression execute..
 protected function ee($expr)
 {
 	if (!$expr) return '';
 	$varcx = &$this->tagcx->tpl->varcx;
-	$code = $this->eec($expr);
-	$s = '';
+	$code = $this->ec($expr);
 	@eval("\$s = ($code);");
 	return $s;
 }
@@ -396,12 +401,12 @@ protected function compileProc()
 			$code .= '<?php else: ?>';
 			break;
 		default:
-			$code .= $child->asStr(TplTag::PROC_COMPILE);
+			$code .= $child->process(TplTag::PROC_COMPILE);
 			break;
 		}
 		else // UE_TEXT
 		{
-			$code .= $child->asStr(TplTag::PROC_COMPILE);
+			$code .= $child->process(TplTag::PROC_COMPILE);
 		}
 	}
 	$code .= '<?php endif; ?>';
@@ -415,7 +420,7 @@ protected function resultProc()
 	$e = null;
 	if ($this->ee($this->defAttr))
 	{
-		$res .= $this->childAsStrEx(TplTag::PROC_RESULT, Node::UE_ELEM, array('else', 'elseif'), false, $i, $i);
+		$res .= $this->childProcessEx(TplTag::PROC_RESULT, Node::UE_ELEM, array('else', 'elseif'), false, $i, $i);
 	}
 	else // if 条件为假
 	{
@@ -432,13 +437,13 @@ protected function resultProc()
 					$i++;
 					if ($e->ee($e->defAttr === '' ? 'false' : $e->defAttr))
 					{
-						$res .= $this->childAsStrEx(TplTag::PROC_RESULT, Node::UE_ELEM, array('else', 'elseif'), false, $i, $i);
+						$res .= $this->childProcessEx(TplTag::PROC_RESULT, Node::UE_ELEM, array('else', 'elseif'), false, $i, $i);
 						return $res;
 					}
 					break;
 				case 'else':
 					$i++;
-					$res .= $this->childAsStrEx(TplTag::PROC_RESULT, Node::UE_ELEM, array('else', 'elseif'), false, $i, $i);
+					$res .= $this->childProcessEx(TplTag::PROC_RESULT, Node::UE_ELEM, array('else', 'elseif'), false, $i, $i);
 					return $res;
 					break;
 				}
@@ -484,14 +489,14 @@ protected function compileProc()
 		$s = '<?php if (count('.$this->ec($this->defAttr).')): ?>';
 		if ($this->attrs[$key] === '')
 		{
-			$s .= '<?php foreach ('.$this->ec($this->defAttr).' as '.$this->ec($key).'): ?>'.$this->childAsStrEx2(TplTag::PROC_COMPILE, $e).'<?php endforeach; ?>';
+			$s .= '<?php foreach ('.$this->ec($this->defAttr).' as '.$this->ec($key).'): ?>'.$this->childProcessEx2(TplTag::PROC_COMPILE, $e).'<?php endforeach; ?>';
 		}
 		else
 		{
-			$s .= '<?php foreach ('.$this->ec($this->defAttr).' as '.$this->ec($key).' => '.$this->ec($this->attrs[$key]).'): ?>'.$this->childAsStrEx2(TplTag::PROC_COMPILE, $e).'<?php endforeach; ?>';
+			$s .= '<?php foreach ('.$this->ec($this->defAttr).' as '.$this->ec($key).' => '.$this->ec($this->attrs[$key]).'): ?>'.$this->childProcessEx2(TplTag::PROC_COMPILE, $e).'<?php endforeach; ?>';
 		}
 		$s .= '<?php else: ?>';
-		$s .= $this->childAsStrEx2(TplTag::PROC_COMPILE, null, false, $pos + 1);
+		$s .= $this->childProcessEx2(TplTag::PROC_COMPILE, null, false, $pos + 1);
 		$s .= '<?php endif; ?>';
 		return $s;
 	}
@@ -499,11 +504,11 @@ protected function compileProc()
 	{
 		if ($this->attrs[$key] === '')
 		{
-			return '<?php foreach ('.$this->ec($this->defAttr).' as '.$this->ec($key).'): ?>'.$this->childAsStr(TplTag::PROC_COMPILE).'<?php endforeach; ?>';
+			return '<?php foreach ('.$this->ec($this->defAttr).' as '.$this->ec($key).'): ?>'.$this->childProcess(TplTag::PROC_COMPILE).'<?php endforeach; ?>';
 		}
 		else
 		{
-			return '<?php foreach ('.$this->ec($this->defAttr).' as '.$this->ec($key).' => '.$this->ec($this->attrs[$key]).'): ?>'.$this->childAsStr(TplTag::PROC_COMPILE).'<?php endforeach; ?>';
+			return '<?php foreach ('.$this->ec($this->defAttr).' as '.$this->ec($key).' => '.$this->ec($this->attrs[$key]).'): ?>'.$this->childProcess(TplTag::PROC_COMPILE).'<?php endforeach; ?>';
 		}
 	}
 }
@@ -524,7 +529,7 @@ protected function resultProc()
 				$name = substr($key, 1);
 				foreach ($varcx[$arrName] as $varcx[$name])
 				{
-					$res .= $this->childAsStrEx2(TplTag::PROC_RESULT, $e);
+					$res .= $this->childProcessEx2(TplTag::PROC_RESULT, $e);
 				}
 			}
 			else
@@ -533,13 +538,13 @@ protected function resultProc()
 				$valName = substr($this->attrs[$key], 1);
 				foreach ($varcx[$arrName] as $varcx[$name] => $varcx[$valName])
 				{
-					$res .= $this->childAsStrEx2(TplTag::PROC_RESULT, $e);
+					$res .= $this->childProcessEx2(TplTag::PROC_RESULT, $e);
 				}
 			}
 		}
 		else
 		{
-			$res .= $this->childAsStrEx2(TplTag::PROC_RESULT, null, false, $pos + 1);
+			$res .= $this->childProcessEx2(TplTag::PROC_RESULT, null, false, $pos + 1);
 		}
 	}
 	else // 没有 loopelse
@@ -549,7 +554,7 @@ protected function resultProc()
 			$name = substr($key, 1);
 			foreach ($varcx[$arrName] as $varcx[$name])
 			{
-				$res .= $this->childAsStr(TplTag::PROC_RESULT);
+				$res .= $this->childProcess(TplTag::PROC_RESULT);
 			}
 		}
 		else
@@ -558,7 +563,7 @@ protected function resultProc()
 			$valName = substr($this->attrs[$key], 1);
 			foreach ($varcx[$arrName] as $varcx[$name] => $varcx[$valName])
 			{
-				$res .= $this->childAsStr(TplTag::PROC_RESULT);
+				$res .= $this->childProcess(TplTag::PROC_RESULT);
 			}
 		}
 	}
@@ -587,15 +592,15 @@ protected function compileProc()
 	if ($this->childFind(Node::UE_ELEM, 'forelse', 0, $pos, $e)) {
 		$code = '<?php '.($init ? $this->ec($this->attrs['var']) : $this->ec($varName).'=0').'; if ('.$this->ec($varName).($d ? ' <= ' : ' >= ').$this->ec($to).'): ?>';
 		$code .= '<?php for (; '.$this->ec($varName).($d ? ' <= ' : ' >= ').$this->ec($to).'; '.$this->ec($varName).' += '.$this->ec($step).'): ?>';
-		$code .= $this->childAsStrEx2(TplTag::PROC_COMPILE, $e);
+		$code .= $this->childProcessEx2(TplTag::PROC_COMPILE, $e);
 		$code .= '<?php endfor; ?>';
 		$code .= '<?php else: ?>';
-		$code .= $this->childAsStrEx2(TplTag::PROC_COMPILE, null, false, $pos + 1);
+		$code .= $this->childProcessEx2(TplTag::PROC_COMPILE, null, false, $pos + 1);
 		$code .= '<?php endif; ?>';
 		return $code;
 	} else {
 		$code = '<?php for ('.($init ? $this->ec($this->attrs['var']) : $this->ec($varName).'=0').'; '.$this->ec($varName).($d ? ' <= ' : ' >= ').$this->ec($to).'; '.$this->ec($varName).' += '.$this->ec($step).'): ?>';
-		$code .= $this->childAsStr(TplTag::PROC_COMPILE);
+		$code .= $this->childProcess(TplTag::PROC_COMPILE);
 		$code .= '<?php endfor; ?>';
 		return $code;
 	}
@@ -622,14 +627,14 @@ protected function resultProc()
 	if ($this->childFind(Node::UE_ELEM, 'forelse', 0, $pos, $e)) {
 		if ($d ? $varcx[$varName] <= $to : $varcx[$varName] >= $to) {
 			for (; ($d ? $varcx[$varName] <= $to : $varcx[$varName] >= $to); $varcx[$varName] += $step) {
-				$res .= $this->childAsStrEx2(TplTag::PROC_RESULT, $e);
+				$res .= $this->childProcessEx2(TplTag::PROC_RESULT, $e);
 			}
 		} else {
-			$res .= $this->childAsStrEx2(TplTag::PROC_RESULT, null, false, $pos + 1);
+			$res .= $this->childProcessEx2(TplTag::PROC_RESULT, null, false, $pos + 1);
 		}
 	} else {
 		for (; ($d ? $varcx[$varName] <= $to : $varcx[$varName] >= $to); $varcx[$varName] += $step) {
-			$res .= $this->childAsStr(TplTag::PROC_RESULT);
+			$res .= $this->childProcess(TplTag::PROC_RESULT);
 		}
 	}
 	return $res;
@@ -648,4 +653,3 @@ protected function resultProc()
 	return $this->tagcx->tpl->result($this->defAttr);
 }
 }
-?>

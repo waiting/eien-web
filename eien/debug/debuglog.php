@@ -1,27 +1,30 @@
-<?
-if (!defined('IN_EIEN')) exit("No in eien framework");
-define('EIEN_DEBUGLOG', 1);
-/**
-调试类
-*/
-$debugPath = EIEN_PATH.'debug/debug.log';
+<?php
+//if (!defined('IN_EIEN')) exit("No in eien framework");
+define('EIEN_DEBUGLOG', 'debug/debuglog.php');
 
-$debuglog = null;
-$gdebugcount = 0;
-function debugLog($str)
+/** 调试日志 */
+class debug
 {
-	global $debuglog,$gdebugcount,$debugPath;
-	if ($debuglog == null)
+	private static $logpath;
+	private static $debuglog;
+	public static function _init()
 	{
-		//if (file_exists($debugPath))
-		//	$debuglog =  new File($debugPath, 'a');
-		//else
-			$debuglog =  new File($debugPath, 'w');
+		self::$logpath = dirname(__FILE__) . '/debug.log';
+	}
+	public static function log( $str )
+	{
+		if ( !is_object(self::$debuglog) )
+		{
+			if ( file_exists(self::$logpath) )
+				self::$debuglog =  new File( self::$logpath, 'a' );
+			else
+				self::$debuglog =  new File( self::$logpath, 'w' );
+		}
+		$micro = microtime(false);
+		$micro = (float)substr( $micro, 0, strpos( $micro, ' ' ) );
+		$micro = round( $micro, 3 );
+		self::$debuglog->puts( $str . ' [' . date('Y-m-d\TH:i:s') . strstr( $micro, '.' ) . ']' . "\r\n" );
 	}
 
-	$debuglog->puts(++$gdebugcount.' - '.$str."\r\n".''."\r\n");
-
 }
-
-
-?>
+debug::_init();

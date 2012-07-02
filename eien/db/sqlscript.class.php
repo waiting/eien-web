@@ -1,99 +1,30 @@
 <?php
-/*
- * SQL脚本解释器
+/** SQL脚本解释器
  * @author WaiTing
  * @version 1.0.0
  */
-define('EIEN_SQLSCRIPT_CLASS', 1);
+//if (!defined('IN_EIEN')) exit("No in eien framework");
+define('EIEN_SQLSCRIPT_CLASS', 'db/sqlscript.class.php');
 
-/**
- * SQL脚本执行器
- * @version 1.0.1
- */
+/** SQL脚本执行器
+ * @version 1.0.1 */
 class SQLScript
 {
-	/**
-	 * @var array
-	 */
 	private $sqlcmdArr = array();   # SQL命令数组
-	/**
-	 * @var array
-	 */
 	private $resArr = array();      # 结果数组，执行完毕后存放结果
-	/**
-	 * @var array
-	 */
 	private $errArr = array();      # 错误数组
-	/**
-	 * @var string
-	 */
-	private $sqlText = '';       # SQL文本
-	/**
-	 * @var IDBConnection
-	 */
 	private $cnn = null;         # 数据库操作接口
 	/**
 	 * @param IDBConnection $cnn
-	 * @return SQLScript
-	 */
+	 * @return SQLScript */
 	function __construct(IDBConnection $cnn)
 	{
 		$this->cnn = $cnn;
 	}
-	/**
-	 * @param string $sqlText
-	 */
-	function setSQLText($sqlText)
+	/** 加载SQL
+	 * @param string $sqlText */
+	function loadSQL($sqlText)
 	{
-		$this->sqlText = $sqlText;
-	}
-	/**
-	 * @param IFile $sqlfile 文件接口
-	 * @param bool[optional] $store
-	 * @param bool[optional] $execute
-	 */
-	function setSQLTextFromIFile(IFile $sqlfile, $store = true, $execute = false)
-	{
-		$cmd = '';
-		$i = 0;
-		while (!$sqlfile->eof())
-		{
-			$line = rtrim($sqlfile->gets());
-			if($line == '') continue;
-			if(substr($line,0,2) == '--') continue;
-			$cmd .= $line;
-			if($cmd[strlen($cmd) - 1] == ';')
-			{
-				if ($store)	$this->sqlcmdArr[$i] = $cmd;
-				if ($execute)
-				{
-					$this->cnn->directQuery($cmd);
-					if ($err = $this->cnn->error()) echo "$cmd :<br />\n".$err."<br />\n";
-				}
-				$i++;
-				$cmd='';
-			}
-			else
-				$cmd .= "\n";
-		}
-	}
-	/**
-	 * @param string $sqlfile
-	 * @param bool[optional] $store
-	 * @param bool[optional] $execute
-	 */
-	function setSQLTextFromFile($sqlfile, $store = true, $execute = false)
-	{
-		$f = new File($sqlfile,'r',false);
-		$this->setSQLTextFromIFile($f, $store, $execute);
-	}
-	/**
-	 * @param bool[optional] $store
-	 * @param bool[optional] $execute
-	 */
-	function parseSQLCommand($store = true, $execute = false)
-	{
-		$sqlText = $this->sqlText;
 		$i = 0;
 		$cmd = '';
 		while (ereg("([^\r\n]+)([\r\n]|\r\n|$)", $sqlText, $regs))
@@ -105,57 +36,75 @@ class SQLScript
 			$cmd .= rtrim($regs[1]);
 			if ($cmd[strlen($cmd) - 1] == ';')
 			{
-				if ($store)	$this->sqlcmdArr[$i] = $cmd;
-				if ($execute)
-				{
-					$this->cnn->directQuery($cmd);
-					if ($err = $this->cnn->error()) echo "$cmd :<br />\n".$err."<br />\n";
-				}
+				$this->sqlcmdArr[$i] = $cmd;
 				$i++;
 				$cmd = '';
 			}
 			else
 				$cmd .= "\n";
 		}
+		return $i;
 	}
-	/**
-	 * @param bool[optional] $on_err_continue
-	 * @param bool[optional] $writeErr
-	 * @param bool[optional] $writeRes
-	 */
-	function execute($on_err_continue = true, $writeErr = true, $writeRes = true)
+	/** 从文件接口加载SQL
+	 * @param IFile $ifile 文件接口 */
+	function loadSQLFromIFile(IFile $ifile)
+	{
+		$cmd = '';
+		$i = 0;
+		while (!$ifile->eof())
+		{
+			$line = rtrim($ifile->gets());
+			if ($line == '') continue;
+			if (substr($line,0,2) == '--') continue;
+			$cmd .= $line;
+			if ($cmd[strlen($cmd) - 1] == ';')
+			{
+				$this->sqlcmdArr[$i] = $cmd;
+				$i++;
+				$cmd='';
+			}
+			else
+				$cmd .= "\n";
+		}
+		return $i;
+	}
+	/** 从文件载入SQL
+	 * @param string $sqlfile */
+	function loadSQLFromFile($sqlfile)
+	{
+		return $this->loadSQLFromIFile(new File($sqlfile, 'r', false));
+	}
+	/** 执行脚本
+	 * @param bool[optional] $onErrorNext 遇到错误继续执行下一句
+	 * @param bool[optional] $storeError
+	 * @param bool[optional] $storeResult */
+	function execute($onErrorNext = false, $storeError = true, $storeResult = true)
 	{
 		$i = 0;
 		foreach ($this->sqlcmdArr as $sqlcmd)
 		{
 			$res = $this->cnn->query($sqlcmd);
-			if ($writeRes) $this->resArr[$i] = $res;
+			if ($storeResult) $this->resArr[$i] = $res;
 			$err = $this->cnn->error();
-			if ($writeErr)
+			if ($storeError)
 				$this->errArr[$i] = $err;
 			else
 			{
 				if ($err)
 				{
-					echo $sqlcmd." :<br />\n";
-					echo $err."<br />\n";
+					echo "SQL Syntax Index $i:<br />\n$sqlcmd<br />\n";
+					echo "<strong style='color:red;'>$err</strong><br />\n";
 				}
 			}
-			if($err && !$on_err_continue) break;
+			if ($err && !$onErrorNext) break;
 			$i++;
 		}
+		return $i;
 	}
-	/**
-	 * @return array
-	 */
-	function resultArr(){ return $this->resArr; }
-	/**
-	 * @return array
-	 */
-	function commandArr(){ return $this->sqlcmdArr; }
-	/**
-	 * @return array
-	 */
-	function errorArr(){ return $this->errArr; }
+	/** 返回结果数组 */
+	function results() { return $this->resArr; }
+	/** 返回命令数组 */
+	function commands() { return $this->sqlcmdArr; }
+	/** 返回错误数组 */
+	function errors() { return $this->errArr; }
 }
-?>
