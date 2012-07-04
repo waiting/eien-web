@@ -1,5 +1,8 @@
 <?php
-set_time_limit(0);
+
+phpinfo();
+
+/*set_time_limit(0);
 require_once dirname(__FILE__).'/../eien/eien.php';
 
 include 'config_inc.php';
@@ -19,3 +22,5 @@ $bak_name = date( 'Y-m-d\TH_i_s', $time ) . strstr( $micro, '.' );
 <body>
 </body>
 </html>
+
+*/

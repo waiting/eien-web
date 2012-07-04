@@ -2,8 +2,7 @@
 /** 文件/目录操作相关
  * @author WaiTing
  * @package Eien
- * @version 1.1.0
- */
+ * @version 1.1.0 */
 //if (!defined('IN_EIEN')) exit("No in eien framework");
 define('EIEN_FILE_CLASS', 'filesys/file.class.php');
 

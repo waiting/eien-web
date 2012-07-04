@@ -20,8 +20,9 @@ $bak_name = isset($_GET['bak_name']) ? gpc($_GET['bak_name']) : '';
 
 if ( $bak_name == '' || !is_dir($data_path.$bak_name) )
 {
-	folder_data( $data_path, $files, $dirs );
 	echo '请指定备份名';
+	// 输出备份名
+	folder_data( $data_path, $files, $dirs );
 	echo '<ul>';
 	foreach ( $dirs as $bak )
 	{
@@ -29,6 +30,7 @@ if ( $bak_name == '' || !is_dir($data_path.$bak_name) )
 		echo "<a href='?bak_name=$bak' target='_blank'><strong>$bak</strong></a>(".bytes_unit(folder_bytes($data_path.$bak)).")";
 		echo "</li>";
 	}
+	
 	echo '</ul>';
 	exit();
 }

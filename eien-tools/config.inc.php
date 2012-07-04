@@ -6,3 +6,6 @@ $config['db_name']        =     'wp_test';        // 数据库名
 
 // 数据路径
 $config['data_path'] = dirname(__FILE__).'/data/';
+
+// 临时目录
+$config['temp_path'] = dirname(__FILE__).'/temp/';

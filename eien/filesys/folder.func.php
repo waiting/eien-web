@@ -2,7 +2,7 @@
 
 define('EIEN_FOLDER_FUNC', 'filesys/folder.func.php');
 
-/**»ñÈ¡ÎÄ¼ş¼Ğ°üº¬ÎÄ¼şµÄÒ»Ğ©ĞÅÏ¢,ÈçÎÄ¼ş×ÜÊı,ÎÄ¼ş¼ĞÊı,×Ü×Ö½ÚÊı*/
+/**è·å–æ–‡ä»¶å¤¹åŒ…å«æ–‡ä»¶çš„ä¸€äº›ä¿¡æ¯,å¦‚æ–‡ä»¶æ€»æ•°,æ–‡ä»¶å¤¹æ•°,æ€»å­—èŠ‚æ•°*/
 function folder_info($path, &$fileCount = null, &$dirCount = null)
 {
 	$handle = opendir($path);
@@ -25,12 +25,12 @@ function folder_info($path, &$fileCount = null, &$dirCount = null)
 	closedir($handle);
 	return $bytes;
 }
-/**ÎÄ¼ş¼ĞËùº¬ÎÄ¼ş×Ü×Ö½ÚÊı*/
+/**æ–‡ä»¶å¤¹æ‰€å«æ–‡ä»¶æ€»å­—èŠ‚æ•°*/
 function folder_bytes($path)
 {
 	return folder_info($path);
 }
-/**»ñÈ¡ÎÄ¼ş¼ĞÖĞµÄÎÄ¼şºÍ×ÓÎÄ¼ş¼Ğ*/
+/**è·å–æ–‡ä»¶å¤¹ä¸­çš„æ–‡ä»¶å’Œå­æ–‡ä»¶å¤¹*/
 function folder_data($path, &$fileArr, &$subFolderArr)
 {
 	$handle = opendir($path);
@@ -48,7 +48,7 @@ function folder_data($path, &$fileArr, &$subFolderArr)
 	asort($fileArr);
 	asort($subFolderArr);
 }
-/** Í¨ÓÃÉ¾³ı.É¾³ıÎÄ¼ş¼ĞºÍÎÄ¼ş*/
+/** é€šç”¨åˆ é™¤.åˆ é™¤æ–‡ä»¶å¤¹å’Œæ–‡ä»¶*/
 function common_delete($path)
 {
 	if (is_dir($path))
@@ -67,33 +67,84 @@ function common_delete($path)
 		unlink($path);
 	}
 }
-/** Ê¹Ä¿Â¼´æÔÚ */
-function make_dir_exists($path, $cb_func_create = null)
+/** ä½¿ç›®å½•å­˜åœ¨ */
+function make_dir_exists( $path, $cb_func_create = null )
 {
-	$arr = split('/', $path);
+	if ( $path == '' ) return '';
+
+	$sub_dirs = preg_split( '@[/\\\\]@', $path, -1, PREG_SPLIT_NO_EMPTY );
+
 	$fullpath = '';
-	foreach ($arr as $subpath)
+	$open_basedirs = array(); # åŸºè·¯å¾„é™åˆ¶
+
+	$osflag = (strtolower(PHP_SHLIB_SUFFIX) == 'dll'); # OSå¹³å°
+	if ( $osflag == false ) # linux ä¸‹
 	{
-		if($subpath != '')
+		$fullpath .= $path[0] == '/' ? '/' : ''; # åˆ¤æ–­æ˜¯å¦ä¸ºæ ¹ç›®å½•
+		$open_basedirs = preg_split( '@:@', ini_get('open_basedir'), -1, PREG_SPLIT_NO_EMPTY );
+	}
+	else # win ä¸‹
+	{
+		if ( $path[0] == '/' || $path[0] == '\\' )
 		{
-			$fullpath .= $subpath . '/';
-			if (!is_dir($fullpath))
+			$doc_root = $_SERVER['DOCUMENT_ROOT'];
+			$fullpath .= substr( $doc_root, 0, 2 ) . '/';
+		}
+		else if ( preg_match( '@\w:@', $sub_dirs[0] ) )
+		{
+			$fullpath .= $sub_dirs[0].'/';
+			unset($sub_dirs[0]);
+		}
+		$open_basedirs = preg_split( '@;@', ini_get('open_basedir'), -1, PREG_SPLIT_NO_EMPTY );
+	}
+	# éªŒè¯åŸºç›®å½•
+	if ( $fullpath != '' ) // è¡¨ç¤ºä¸æ˜¯ç›¸å¯¹è·¯å¾„
+	{
+		$is_ok = false;
+		$subks = array(); // è¦ç§»é™¤çš„åŸºç›®å½•ç´¢å¼•
+		foreach ( $open_basedirs as $k => $basedir )
+		{
+			$basedir = str_replace( '\\', '/', realpath($basedir) ).'/';
+			$temp_path = $fullpath;
+			$subks = array();
+			foreach ( $sub_dirs as $k => $sub )
 			{
-				if ($cb_func_create == null)
+				$subks[] = $k;
+				$temp_path .= $sub.'/';
+				$ret = strpos( $basedir, $temp_path );
+				if ( $ret !== false && $ret === 0 )
 				{
-					mkdir($fullpath, 0700);
+					if ( $temp_path == $basedir )
+					{
+						$fullpath = $basedir; # è®¾ä¸ºåŸºè·¯å¾„
+						$is_ok = true;
+						break;
+					}
 				}
 				else
 				{
-					$cb_func_create($fullpath);
+					break;
 				}
 			}
+			if ( $is_ok ) break;
+		}
+		// åˆ é™¤åŸºç›®å½•
+		if ( $is_ok ) foreach ( $subks as $k ) unset($sub_dirs[$k]);
+	}
+
+	foreach ( $sub_dirs as $sub )
+	{
+		$fullpath .= $sub . '/';
+		if ( !is_dir($fullpath) )
+		{
+			$ret = $cb_func_create == null ? mkdir( $fullpath, 0700 ) : $cb_func_create($fullpath);
+			if ( !$ret ) break;
 		}
 	}
 	return $fullpath;
 }
 
-/** ÎÄ¼şÃû,À©Õ¹Ãû */
+/** æ–‡ä»¶å,æ‰©å±•å */
 function file_name($fullpath, &$ext = null)
 {
 	$name = basename($fullpath);
@@ -101,12 +152,5 @@ function file_name($fullpath, &$ext = null)
 	if ($pos !== false) $ext = substr($name, $pos + 1);
 	return substr($name, 0, $pos === false ? -1 : $pos);
 }
-
-
-
-
-
-
-
 
 
