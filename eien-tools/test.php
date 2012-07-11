@@ -1,26 +1,30 @@
 <?php
+header('Content-type: text/xml; charset=utf-8');
 
-phpinfo();
+require_once dirname(__FILE__).'/../eien/filesys/folder.func.php';
+require_once dirname(__FILE__).'/../eien/filesys/file.class.php';
+require_once dirname(__FILE__).'/../eien/sitemap/sitemap.class.php';
+require_once dirname(__FILE__).'/../eien/db/db.class.php';
 
-/*set_time_limit(0);
-require_once dirname(__FILE__).'/../eien/eien.php';
+DbConfig::$db_name = 'wp_test';
+DbConfig::$db_user = 'wt';
+DbConfig::$db_pwd = 'wt';
 
-include 'config_inc.php';
+function myrecord2contentitem( $fields )
+{
+	// public function __construct( $title, $loc, $lastmod = null, $changefreq = null, $priority = null );
+	return new SiteContentItem(
+		$fields['post_title'],
+		$fields['post_type'] == 'post' ? "http://www.x86pro.com/article/$fields[post_name]" :  "http://www.x86pro.com/$fields[post_name]"
+	);
+}
 
-$temp_root = 'temp/'; # 临时Root目录
+$sitemap = new Sitemap();
+$sitemap->sitemapGenerate(
+	new SiteContent(
+		"SELECT * FROM wp_posts where post_status='publish' order by post_type, post_name;",
+		'myrecord2contentitem'
+	),
+	new StdoutFile( 'sitemap.xml', 'w', false )
+);
 
-# 2012-06-28T09_49_43.08_00
-$micro = microtime(true);
-$time = (int)$micro;
-$bak_name = date( 'Y-m-d\TH_i_s', $time ) . strstr( $micro, '.' );
-?><!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="utf-8" />
-<title>备份数据库</title>
-</head>
-<body>
-</body>
-</html>
-
-*/
