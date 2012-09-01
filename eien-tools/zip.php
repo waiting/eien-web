@@ -1,7 +1,7 @@
 <?php
 set_time_limit(0);
 require_once dirname(__FILE__).'/../eien/extra/extra.func.php';
-require_once dirname(__FILE__).'/../eien/filesys/folder.func.php';
+require_once dirname(__FILE__).'/../eien/filesys/filesys.func.php';
 require_once dirname(__FILE__).'/config.inc.php';
 # 要压缩的目录路径
 $compress_path = isset($_GET['path']) ? gpc($_GET['path']) : '';

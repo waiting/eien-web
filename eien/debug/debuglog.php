@@ -1,5 +1,7 @@
 <?php
-//if (!defined('IN_EIEN')) exit("No in eien framework");
+/** 调试
+ * @@dependency filesys/file.class.php */
+
 define('EIEN_DEBUGLOG', 'debug/debuglog.php');
 
 /** 调试日志 */
@@ -15,6 +17,7 @@ class debug
 	{
 		if ( !is_object(self::$debuglog) )
 		{
+			// @@use class File
 			if ( file_exists(self::$logpath) )
 				self::$debuglog =  new File( self::$logpath, 'a' );
 			else

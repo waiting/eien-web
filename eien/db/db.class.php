@@ -1,9 +1,8 @@
 <?php
-/*	@brief eienWeb框架 数据库操作
+/**	@brief eienWeb框架 数据库操作
 	@author WaiTing
-	@version 1.0.0 Beta
- */
-//if (!defined('IN_EIEN')) exit("No in eien framework");
+	@version 1.0.0 Beta */
+
 define('EIEN_DB_CLASS', 'db/db.class.php');
 
 /** 数据库配置 */

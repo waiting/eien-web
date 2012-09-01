@@ -2,7 +2,8 @@
 /** 文件/目录操作相关
  * @author WaiTing
  * @package Eien
- * @version 1.1.0 */
+ * @version 1.1.0
+ * @@dependency filesys/filesys.func.php */
 
 define('EIEN_FILE_CLASS', 'filesys/file.class.php');
 
@@ -225,7 +226,8 @@ class BlockOutFile extends File
 	{
 		$this->blockSize = $blockSize;
 		$this->dirname = dirname($filename);
-		make_dir_exists($this->dirname); // 确保路径存在 in folder.func.php
+		// 确保路径存在
+		make_dir_exists($this->dirname); # @@use function make_dir_exists()
 		$this->basename = basename($filename);
 		$pos = strrpos( $this->basename, '.' );
 		if ( $pos === false )
@@ -243,7 +245,7 @@ class BlockOutFile extends File
 	public function nextBlock()
 	{
 		$this->close();
-		$fileno = $this->fileno;//sprintf('%03d',$this->fileno);
+		$fileno = $this->fileno;
 		$this->open( $this->dirname.'/'.$this->filetitle.'_'.$fileno.$this->extname, 'w', false );
 		$this->fileno++;
 		return true;
@@ -257,7 +259,7 @@ class BlockOutFile extends File
 			$this->nextBlock();
 			$this->filesize = $lenStr;
 		}
-		return parent::puts( $this->fp, $str );
+		return parent::puts($str);
 	}
 
 }

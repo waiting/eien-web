@@ -2,4 +2,4 @@ useless/
 temp/
 eien-tools/data/
 eien-tools/temp/
-*.7z
+/*.php

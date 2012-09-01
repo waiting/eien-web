@@ -9,7 +9,7 @@ class SessionConfig
 	public static $sessWhere = 0;  # Session存在于哪: 1数据库,0独立文件
 	public static $savePath;       # Session独立文件路径目录
 
-	public static _init()
+	public static function _init()
 	{
 		self::$savePath = realpath(dirname(__FILE__).'/data');
 	}

@@ -2,9 +2,8 @@
 /** 一些额外辅助函数
  * @package Eien.Web.ExtraFunc
  * @author WaiTing
- * @version 1.1.0
- */
-//if (!defined('IN_EIEN')) exit("No in eien framework");
+ * @version 1.1.0 */
+
 define('EIEN_EXTRA_FUNC', 'extra/extra.func.php');
 
 /** Extra Functions config */
@@ -91,9 +90,7 @@ function flash_show($mains, $params = array(), $flaVars = array())
 }
 
 require_once 'mime.inc.php';
-/**
- * get mime type
- */
+/** get mime type */
 function get_mime($filename, $ext = null)
 {
 	$flag = (strtolower(PHP_SHLIB_SUFFIX) == 'dll');
@@ -204,21 +201,18 @@ function split_page($addr, $p, $pc, $sc = -1, $first = '首页'/*'&lsaquo;&lsaqu
 
 	return $pages;
 }
-/**
- * 获取当前文档的URL
- * @return string 返回当前文档的URL
- */
+/** 获取当前文档的URL
+ * @return string 返回当前文档的URL */
 function get_url()
 {
-	//$URL=$_SERVER['PHP_SELF'].iifstr($_SERVER['QUERY_STRING']!='','?'.$_SERVER['QUERY_STRING']);
 	return $_SERVER['REQUEST_URI'];
 }
-/**
- * 给定一个值，若真，则输出指定字符串，否则输出另外字符串
+
+/** 给定一个值，若真，则输出指定字符串，否则输出另外字符串
  * @param $b boolean
- * @param $v1
- * @param $v2
- */
+ * @param $v1 string
+ * @param $v2 string
+ * @return string */
 function iif($b, $v1, $v2 = '')
 {
 	return $b ? $v1 : $v2;
@@ -266,8 +260,7 @@ function limit_words($str, $n, $chn = true)
 /** 处理文章中的HTML特殊字符
  * @param string $string 要处理的字符串
  * @param boolean $bIsHtml 若为true,则结果可包含html标签; 为false,则把html标签转化为&??;
- * @return string
- */
+ * @return string */
 function str_html($string, $bIsHtml = false)
 {
 	if (!$bIsHtml)
@@ -279,20 +272,17 @@ function str_html($string, $bIsHtml = false)
 	$string = nl2br($string);
 	return $string;
 }
-/** 此函数将把PHP字符串转换成单行形式
- * 把换行转化为\n
- * @param string $string
- * @return string
- */
-function str_source($string)
+/** 此函数将把PHP字符串变量转换成C语言风格的单行源码形式
+ * @param $str string 
+ * @return string */
+function str_csource( $str )
 {
-	return addcslashes($string,"\'\"\x0..\x19");
+	return addcslashes( $str, "\'\"\x0..\x19" );
 }
 /** 从GET,POST,COOKIE获取字符串. ',",\,NULL
- * @param string $string
- * @param bool[optional] $haveSlashes true,结果包含\; false,结果祛除\
- * @return string
- */
+ * @param $string string
+ * @param $haveSlashes bool[optional] true,结果包含\; false,结果祛除\
+ * @return string */
 function gpc($string, $haveSlashes = false)
 {
 	$magic_quotes_gpc = ini_get('magic_quotes_gpc');
@@ -319,24 +309,22 @@ function arr_gpc($arr, $haveSlashes = false)
 /** 从脚本接收字符串
  * 由于脚本编码是UTF-8,所以需要转换
  * 此函数需要设置全局变量$page_charset,指定当前页面编码
- * @param string $str
- * @return string
- */
-function str_from_script($str, $do_gpc = false, $haveSlashes = false)
+ * @param $str string
+ * @return string */
+function str_from_script( $str, $do_gpc = false, $haveSlashes = false )
 {
 	$page_charset = ExtraConfig::$page_charset;
-	return $do_gpc ? gpc(iconv('UTF-8',"{$page_charset}//IGNORE",$str), $haveSlashes) : iconv('UTF-8',"{$page_charset}//IGNORE",$str);
+	return $do_gpc ? gpc( iconv( 'UTF-8', "{$page_charset}//IGNORE", $str ), $haveSlashes ) : iconv( 'UTF-8', "{$page_charset}//IGNORE", $str );
 }
 
-/**
- * 从Script接受数据
+/** 从Script接受数据
  * 专门处理GET POST数组的
- * @param array $arr
- * @param bool[optional] $do_gpc
- * @param bool[optional] $haveSlashes
- * @return array
- */
-function arr_from_script($arr, $do_gpc = false, $haveSlashes = false){
+ * @param $arr array
+ * @param $do_gpc bool[optional]
+ * @param $haveSlashes bool[optional]
+ * @return array */
+function arr_from_script($arr, $do_gpc = false, $haveSlashes = false)
+{
 	$newarr = array();
 	foreach($arr as $k => $v)
 	{
@@ -351,10 +339,8 @@ function arr_from_script($arr, $do_gpc = false, $haveSlashes = false){
 	}
 	return $newarr;
 }
-/**
- * 返回用户IP地址
- * @return string
- */
+/** 返回用户IP地址
+ * @return string */
 function ip()
 {
 	$ip = "Unknown";
@@ -388,12 +374,12 @@ function bytes_unit($size)
 		return ceil($size * 100 / (1024 * 1024)) / 100 . ' MB';
 	}
 }
-// 加密
+/** 加密 */
 function site_encode($data)
 {
 	return base64_encode($data);
 }
-// 解密
+/** 解密 */
 function site_decode($encodedata)
 {
 	return base64_decode($encodedata);
@@ -402,6 +388,6 @@ function site_decode($encodedata)
 /** 引发致命错误
 function fatal_error($errstr)
 {
-	exit( '<strong>Fatal error</strong>: '.__METHOD__.'(): '.$errstr.' in <strong>'.__FILE__.'</strong> on line <strong>'.__LINE__.'</strong>');
+	return "exit('<strong>Fatal error</strong>: '.iif(__METHOD__,__METHOD__.'(): ').".var_export( $errstr, true ).".' in <strong>'.__FILE__.'</strong> on line <strong>'.__LINE__.'</strong>');";
 }*/
 

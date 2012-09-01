@@ -5,4 +5,4 @@
 
 不同的**SiteCategoryItem**对应一个**ISiteContent**接口。
 
-**Sitemap**类会根据提供的**SiteCategoryItem**, **ISiteContent**接口生成*sitemap*。如果有多个*Category*，则生成多个*sitemap*，并生成一个*SitemapIndex*。
+**Sitemap**类会根据提供的**SiteCategoryItem**, **ISiteContent**接口生成*sitemap*。如果有多个**SiteCategoryItem**，则生成多个*sitemap*，并生成一个*SitemapIndex*。

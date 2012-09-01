@@ -1,6 +1,9 @@
 <?php
+/** 文件系统相关函数
+ * @author WaiTing
+ * @version 1.0.0 */
 
-define('EIEN_FOLDER_FUNC', 'filesys/folder.func.php');
+define('EIEN_FILESYS_FUNC', 'filesys/filesys.func.php');
 
 /**获取文件夹包含文件的一些信息,如文件总数,文件夹数,总字节数*/
 function folder_info($path, &$fileCount = null, &$dirCount = null)
@@ -31,7 +34,7 @@ function folder_bytes($path)
 	return folder_info($path);
 }
 /**获取文件夹中的文件和子文件夹*/
-function folder_data($path, &$fileArr, &$subFolderArr)
+function folder_data($path, &$fileArr, &$subFolderArr, $rsort = false )
 {
 	$handle = opendir($path);
 	$fileArr = array();
@@ -45,8 +48,16 @@ function folder_data($path, &$fileArr, &$subFolderArr)
 			$fileArr[] = $filename;
 	}
 	closedir($handle);
-	asort($fileArr);
-	asort($subFolderArr);
+	if ( $rsort )
+	{
+		arsort($fileArr);
+		arsort($subFolderArr);
+	}
+	else
+	{
+		asort($fileArr);
+		asort($subFolderArr);
+	}
 }
 /** 通用删除.删除文件夹和文件*/
 function common_delete($path)
@@ -153,4 +164,23 @@ function file_name($fullpath, &$ext = null)
 	return substr($name, 0, $pos === false ? -1 : $pos);
 }
 
-
+/** 在指定路径下枚举指定扩展名的文件 */
+function enum_files( $path, $ext, &$arrFiles )
+{
+	folder_data( $path, $files, $paths );
+	$filesCount = 0;
+	foreach ( $files as $file )
+	{
+		file_name( $file, $thisExt );
+		if ( $ext == $thisExt )
+		{
+			$arrFiles[] = "$path/$file";
+			$filesCount++;
+		}
+	}
+	foreach ( $paths as $subpath )
+	{
+		$filesCount += enum_files( "$path/$subpath", $ext, $arrFiles );
+	}
+	return $filesCount;
+}

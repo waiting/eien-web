@@ -5,7 +5,7 @@ require_once dirname(__FILE__).'/../eien/db/db.class.php';
 require_once dirname(__FILE__).'/../eien/db/sqlbackup.class.php';
 require_once dirname(__FILE__).'/../eien/db/sqlscript.class.php';
 require_once dirname(__FILE__).'/../eien/filesys/file.class.php';
-require_once dirname(__FILE__).'/../eien/filesys/folder.func.php';
+require_once dirname(__FILE__).'/../eien/filesys/filesys.func.php';
 
 include 'config.inc.php';
 

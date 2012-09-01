@@ -2,8 +2,9 @@
 /** 此类完成从数据库到SQL语句的转化
  * @author WaiTing
  * @package Eien.Web.DB.SQL
- * @version 1.1.0 */
-//if (!defined('IN_EIEN')) exit("No in eien framework");
+ * @version 1.1.0
+ * @@dependency db/db.class.php,db/sqlscript.class.php,filesys/file.class.php */
+
 define('EIEN_SQLBACKUP_CLASS', 'db/sqlbackup.class.php');
 
 /** 以下是数据库备份类SQLBackup
@@ -11,22 +12,18 @@ define('EIEN_SQLBACKUP_CLASS', 'db/sqlbackup.class.php');
 class SQLBackup
 {
 	/**
-	 * @var IDBConnection
-	 */
-	private $cnn = null;    # 数据库操作接口
+	 * @var IDBConnection */
+	private $cnn = null;    # 数据库操作接口 @@use interface IDBConnection
 	/**
-	 * @var IFile
-	 */
-	private $file = null;  # 文件操作接口
+	 * @var IFile */
+	private $file = null;  # 文件操作接口 @@use interface IFile
 	/**
-	 * @var array
-	 */
+	 * @var array */
 	private $tableQuotes = array( '', '' );
 	/**
-	 * @param IDBConnection $cnn
-	 * @param IFile $file
-	 * @return SQLBackup
-	 */
+	 * @param $cnn IDBConnection
+	 * @param $file IFile
+	 * @return SQLBackup */
 	function __construct( IDBConnection $cnn, IFile $file )
 	{
 		$this->cnn = $cnn;
@@ -34,12 +31,11 @@ class SQLBackup
 		$this->tableQuotes = $cnn->tableQuotes();
 	}
 	/**
-	 * @param string $tablename
-	 */
+	 * @param $tablename string */
 	function backupTableStructure($tablename)
 	{
 		$res = $this->cnn->query("SHOW CREATE TABLE {$this->tableQuotes[0]}{$tablename}{$this->tableQuotes[1]};");
-		$row = $res->fetchRow();
+		$row = $res->fetchRow(); # @@use interface IDBResult
 		$this->file->puts("\n");
 		$this->file->puts("-- -----------------------------\n");
 		$this->file->puts("-- Table {$this->tableQuotes[0]}{$tablename}{$this->tableQuotes[1]} structure;\n");
@@ -48,8 +44,7 @@ class SQLBackup
 		$this->file->puts($row[1].";\n");
 	}
 	/**
-	 * @param string $tablename
-	 */
+	 * @param string $tablename */
 	function backupTableData($tablename)
 	{
 		$this->file->puts("\n");
@@ -71,9 +66,7 @@ class SQLBackup
 			$this->file->puts($sql.implode(',',$valueArr).');'."\n");
 		}
 	}
-	/**
-		备份数据库
-	 */
+	/** 备份数据库 */
 	function backupDB($backupStructure = true)
 	{
 		$this->file->puts("-- ------------------------------------------\n");
@@ -99,13 +92,11 @@ class SQLBackup
 		foreach ($tablenames as $tablename)
 			$this->backupTableData($tablename);
 	}
-	/**
-		恢复数据库
-	 */
+	/** 恢复数据库 */
 	function resumeDB()
 	{
-		$script = new SQLScript($this->cnn);
-		$script->loadSQLFromIFile($this->file);
+		$script = new SQLScript($this->cnn); # @@use class SQLScript
+		$script->loadSQLFromIFile($this->file); # @@use interface IFile
 		$script->execute();
 	}
 }

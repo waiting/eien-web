@@ -2,8 +2,8 @@
 /** SQL脚本解释器
  * @author WaiTing
  * @version 1.0.0
- */
-//if (!defined('IN_EIEN')) exit("No in eien framework");
+ * @@dependency db/db.class.php,filesys/file.class.php */
+
 define('EIEN_SQLSCRIPT_CLASS', 'db/sqlscript.class.php');
 
 /** SQL脚本执行器
@@ -13,16 +13,16 @@ class SQLScript
 	private $sqlcmdArr = array();   # SQL命令数组
 	private $resArr = array();      # 结果数组，执行完毕后存放结果
 	private $errArr = array();      # 错误数组
-	private $cnn = null;         # 数据库操作接口
+	private $cnn = null;         # 数据库操作接口 @@use interface IDBConnection
 	/**
-	 * @param IDBConnection $cnn
+	 * @param $cnn IDBConnection
 	 * @return SQLScript */
 	function __construct(IDBConnection $cnn)
 	{
 		$this->cnn = $cnn;
 	}
 	/** 加载SQL
-	 * @param string $sqlText */
+	 * @param $sqlText string */
 	function loadSQL($sqlText)
 	{
 		$i = 0;
@@ -45,8 +45,8 @@ class SQLScript
 		}
 		return $i;
 	}
-	/** 从文件接口加载SQL
-	 * @param IFile $ifile 文件接口 */
+	/** 从文件接口加载SQL @@use interface IFile
+	 * @param $ifile IFile 文件接口 */
 	function loadSQLFromIFile(IFile $ifile)
 	{
 		$cmd = '';
@@ -69,15 +69,16 @@ class SQLScript
 		return $i;
 	}
 	/** 从文件载入SQL
-	 * @param string $sqlfile */
+	 * @param $sqlfile string */
 	function loadSQLFromFile($sqlfile)
 	{
 		return $this->loadSQLFromIFile(new File($sqlfile, 'r', false));
 	}
 	/** 执行脚本
-	 * @param bool[optional] $onErrorNext 遇到错误继续执行下一句
-	 * @param bool[optional] $storeError
-	 * @param bool[optional] $storeResult */
+	 * @param $onErrorNext bool[optional] 遇到错误继续执行下一句
+	 * @param $storeError bool[optional] 存储错误
+	 * @param $storeResult bool[optional] 存储结果
+	 * @return int 成功执行的语句数 */
 	function execute($onErrorNext = false, $storeError = true, $storeResult = true)
 	{
 		$i = 0;
