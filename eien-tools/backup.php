@@ -6,7 +6,7 @@ require_once dirname(__FILE__).'/../eien/db/db.class.php';
 require_once dirname(__FILE__).'/../eien/db/sqlbackup.class.php';
 require_once dirname(__FILE__).'/../eien/db/sqlscript.class.php';
 require_once dirname(__FILE__).'/../eien/filesys/file.class.php';
-require_once dirname(__FILE__).'/../eien/filesys/filesys.func.php';
+require_once dirname(__FILE__).'/../eien/filesys/folder.func.php';
 
 include 'config.inc.php';
 
@@ -31,6 +31,7 @@ $bak_exec = isset($_GET['bak_exec']) ? (int)$_GET['bak_exec'] : 0;
 
 if ( $bak_exec )
 {
+	make_dir_exists($bak_path); # 保证目录存在
 	$bak = new SQLBackup( db::cnn(true), new BlockOutFile("$bak_path/db.sql") );
 	$bak->backupDB();
 	echo "<strong>$bak_name</strong>(".bytes_unit(folder_bytes($bak_path)).") Backup OK!";

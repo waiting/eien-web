@@ -122,8 +122,7 @@ class db
 
 
 /**	@brief 数据库连接接口
-	@since ver 1.0.0
- */
+	@since ver 1.0.0 */
 interface IDBConnection
 {
 	/**	@brief 连接数据库
@@ -401,8 +400,7 @@ define('DBCNN_CONNECT',1);
 //! MySQL级别的,相同参数的连接,直接使用先前的有效连接
 define('DBCNN_PCONNECT',2);
 
-/**	@brief MYSQL连接类
- */
+/**	@brief MYSQL连接类 */
 class MySQLConnection implements IDBConnection
 {
 public $mysql_cnn = null;
